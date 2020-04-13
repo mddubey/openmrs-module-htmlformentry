@@ -13,16 +13,30 @@
  */
 package org.openmrs.module.htmlformentry.tag;
 
-import java.util.List;
-import java.util.Map;
-
+import org.apache.commons.collections.CollectionUtils;
 import org.openmrs.EncounterRole;
+import org.openmrs.Person;
 import org.openmrs.Provider;
+import org.openmrs.Role;
+import org.openmrs.User;
+import org.openmrs.api.ProviderService;
+import org.openmrs.api.UserService;
+import org.openmrs.api.context.Context;
 import org.openmrs.module.htmlformentry.HtmlFormEntryUtil;
 import org.openmrs.module.htmlformentry.util.MatchMode;
 import org.openmrs.module.htmlformentry.widget.ProviderAjaxAutoCompleteWidget;
 import org.openmrs.module.htmlformentry.widget.ProviderWidget;
 import org.openmrs.module.htmlformentry.widget.Widget;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.openmrs.module.htmlformentry.HtmlFormEntryUtil.getAllProviders;
+import static org.openmrs.module.htmlformentry.HtmlFormEntryUtil.getProviderByUserRoles;
 
 /**
  * Defines the configuration attributes available in the encounterProviderAndRole tag, and
@@ -36,6 +50,7 @@ public class EncounterProviderAndRoleTag {
 	private EncounterRole encounterRole; // Whether this should be used specifically to set a specific Encounter Role
 	private boolean autocompleteProvider; // Whether autocomplete or dropdown (default is dropdown)
 	private List<String> providerRoles; // Comma-separated list of roles to limit providers to
+	private List<String> userRoles; // Comma-separated list of user roles to limit providers to; ignored if providerRoles are given
 	private MatchMode providerMatchMode; // For autocomplete, what match mode to use for searching
 	private Provider defaultValue; // Can set to "currentuser" or a specific provider id/uuid
 	private List<Provider> providers; // Enables population with list of allowed providers
@@ -52,14 +67,22 @@ public class EncounterProviderAndRoleTag {
 		providerMatchMode = TagUtil.parseParameter(parameters, "providerMatchMode", MatchMode.class, MatchMode.ANYWHERE);
 		defaultValue = TagUtil.parseParameter(parameters, "default", Provider.class);
 		providerRoles = TagUtil.parseListParameter(parameters, "providerRoles", String.class);
+		userRoles = TagUtil.parseListParameter(parameters, "userRoles", String.class);
 		if (!autocompleteProvider) {
-			providers = HtmlFormEntryUtil.getProviders(providerRoles, true);
+			if (CollectionUtils.isNotEmpty(providerRoles)) {
+				providers = HtmlFormEntryUtil.getProviders(providerRoles, true);
+			} else if (CollectionUtils.isNotEmpty(userRoles)) {
+				providers = getProviderByUserRoles(userRoles);
+			} else {
+				providers = getAllProviders();
+			}
 		}
 	}
 
+
 	public Widget instantiateProviderWidget() {
 		if (isAutocompleteProvider()) {
-			return new ProviderAjaxAutoCompleteWidget(getProviderMatchMode(), providerRoles);
+			return new ProviderAjaxAutoCompleteWidget(getProviderMatchMode(), providerRoles, userRoles);
 		}
 		else {
 			return new ProviderWidget(providers);

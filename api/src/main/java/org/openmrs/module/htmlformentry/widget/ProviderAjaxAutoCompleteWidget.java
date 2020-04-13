@@ -13,6 +13,7 @@ import org.springframework.util.StringUtils;
 
 public class ProviderAjaxAutoCompleteWidget implements Widget {
 
+    private final List<String> userRoles;
     private List<String> providerRoles;
     private MatchMode matchMode;
     private Provider initialValue;
@@ -30,9 +31,10 @@ public class ProviderAjaxAutoCompleteWidget implements Widget {
         }
     }
 
-    public ProviderAjaxAutoCompleteWidget(MatchMode matchMode, List<String> providerRoles) {
+    public ProviderAjaxAutoCompleteWidget(MatchMode matchMode, List<String> providerRoles, List<String> userRoles) {
         setMatchMode(matchMode);
         this.providerRoles = providerRoles;
+        this.userRoles = userRoles;
     }
 
     @Override
@@ -79,6 +81,12 @@ public class ProviderAjaxAutoCompleteWidget implements Widget {
             String escapedCsvRoles = StringEscapeUtils.escapeJavaScript(csvRoles);
             sb.append("<input type='hidden' id='").append(context.getFieldName(this)+"_providerRoles_hid'");
             sb.append(" value='").append(escapedCsvRoles).append("' />\n");
+
+            //Add hidden field for user roles
+            String csvUserRoles = StringUtils.collectionToCommaDelimitedString(userRoles);
+            String escapedCsvUserRoles = StringEscapeUtils.escapeJavaScript(csvUserRoles);
+            sb.append("<input type='hidden' id='").append(context.getFieldName(this)+"_userRoles_hid'");
+            sb.append(" value='").append(escapedCsvUserRoles).append("' />\n");
 
             sb.append("<input name=\"" + context.getFieldName(this) + "_hid" + "\" id=\"");
             sb.append(context.getFieldName(this) + "_hid" + "\"");

@@ -247,6 +247,7 @@ function setupProviderAutocomplete(element) {
     var textField = jQuery(element);
     var providerMatchMode = jQuery("#"+element.id+"_matchMode_hid");
     var providerRoles = jQuery("#"+element.id+"_providerRoles_hid");
+    var userRoles = jQuery("#"+element.id+"_userRoles_hid");
     var select = false;
 
     if (hiddenField.length > 0 && textField.length > 0) {
@@ -257,7 +258,8 @@ function setupProviderAutocomplete(element) {
 				var urlParams = {
 					"searchParam": textField.val(),
 					"matchMode": providerMatchMode.val(),
-					"providerRoles": providerRoles.val()
+					"providerRoles": providerRoles.val(),
+					"userRoles": userRoles.val()
 				};
 
 				jQuery.getJSON(url, urlParams, function(data) {

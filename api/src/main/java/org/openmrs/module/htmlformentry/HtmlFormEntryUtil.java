@@ -34,6 +34,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -65,8 +66,11 @@ import org.openmrs.Program;
 import org.openmrs.ProgramWorkflow;
 import org.openmrs.ProgramWorkflowState;
 import org.openmrs.Provider;
+import org.openmrs.Role;
 import org.openmrs.User;
 import org.openmrs.api.APIException;
+import org.openmrs.api.ProviderService;
+import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 import org.openmrs.messagesource.MessageSourceService;
 import org.openmrs.module.htmlformentry.FormEntryContext.Mode;
@@ -2062,6 +2066,25 @@ public class HtmlFormEntryUtil {
 
 		return providerRole;
 	}
+
+	public static ArrayList<Provider> getProviderByUserRoles(List<String> userRoles) {
+		Set<Provider> providersByUserRoles = new HashSet<Provider>();
+		UserService userService = Context.getUserService();
+		ProviderService providerService = Context.getProviderService();
+		for (String userRole : userRoles) {
+			Role role = userService.getRole(userRole);
+			List<User> usersByRole = userService.getUsersByRole(role);
+			for (User user : usersByRole) {
+				Person person = user.getPerson();
+				Collection<Provider> providersByPerson = providerService.getProvidersByPerson(person);
+				if (!CollectionUtils.isEmpty(providersByPerson)) {
+					providersByUserRoles.add(providersByPerson.iterator().next());
+				}
+			}
+		}
+		return new ArrayList<Provider>(providersByUserRoles);
+	}
+
 
 	public static List<Provider> getProviders(List<String> providerRoleIds, boolean returnAllIfNoRolesSpecified) {
 		if (providerRoleIds == null || providerRoleIds.isEmpty()) {
